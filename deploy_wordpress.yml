@@ -60,6 +60,15 @@
         state: directory
         mode: '0755'
 
+    - name: Vérifier que le répertoire WordPress existe
+      stat:
+        path: "{{ wp_dir }}"
+      register: wp_dir_stat
+
+    - name: Afficher le statut du répertoire WordPress
+      debug:
+        var: wp_dir_stat
+
     - name: Créer docker-compose.yml
       template:
         src: templates/docker-compose.yml.j2
@@ -70,3 +79,4 @@
       community.docker.docker_compose_v2:
         project_src: "{{ wp_dir }}"
         state: present
+      when: wp_dir_stat.stat.isdir is defined and wp_dir_stat.stat.isdir
