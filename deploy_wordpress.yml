@@ -11,50 +11,6 @@
     docker_compose_template_url: https://raw.githubusercontent.com/DB-Alexandre/CESI-ANSIBLE/main/templates/docker-compose.yml.j2
 
   tasks:
-    - name: Installer les dépendances nécessaires
-      apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
-        state: present
-        update_cache: yes
-
-    - name: Ajouter la clé GPG officielle de Docker
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Ajouter le dépôt Docker
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
-        state: present
-
-    - name: Installer Docker
-      apt:
-        name: docker-ce
-        state: present
-        update_cache: yes
-
-    - name: Activer et démarrer le socket Docker
-      systemd:
-        name: docker.socket
-        enabled: yes
-        state: started
-
-    - name: Redémarrer le service Docker
-      systemd:
-        name: docker
-        state: restarted
-        daemon_reload: yes
-
-    - name: Installer Docker Compose
-      get_url:
-        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
-        dest: /usr/local/bin/docker-compose
-        mode: '0755'
-
     - name: Vérifier les permissions du répertoire /opt
       file:
         path: /opt
