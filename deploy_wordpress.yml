@@ -34,6 +34,7 @@
         src: "{{ wp_dir }}/docker-compose.yml.j2"
         dest: "{{ wp_dir }}/docker-compose.yml"
         mode: '0644'
+        remote_src: yes
 
     - name: Vérifier que le répertoire WordPress existe
       stat:
