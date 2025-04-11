@@ -54,6 +54,12 @@
         dest: /usr/local/bin/docker-compose
         mode: '0755'
 
+    - name: Vérifier les permissions du répertoire /opt
+      file:
+        path: /opt
+        state: directory
+        mode: '0755'
+
     - name: Créer le répertoire pour WordPress
       file:
         path: "{{ wp_dir }}"
@@ -79,4 +85,4 @@
       community.docker.docker_compose_v2:
         project_src: "{{ wp_dir }}"
         state: present
-      when: wp_dir_stat.stat.isdir is defined and wp_dir_stat.stat.isdir
+      when: wp_dir_stat.stat.exists and wp_dir_stat.stat.isdir
