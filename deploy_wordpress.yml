@@ -29,6 +29,12 @@
         dest: "{{ wp_dir }}/docker-compose.yml.j2"
         mode: '0644'
 
+    - name: Installer pip3 s’il n’est pas présent
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+
     - name: Installer jinja2-cli via pip
       ansible.builtin.pip:
         name: jinja2-cli
