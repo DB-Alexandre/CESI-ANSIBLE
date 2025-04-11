@@ -23,12 +23,6 @@
         state: directory
         mode: '0755'
 
-    - name: Transformer le template en docker-compose.yml
-      template:
-        src: "{{ wp_dir }}/docker-compose.yml.j2"
-        dest: "{{ wp_dir }}/docker-compose.yml"
-        mode: '0644'
-
     - name: Vérifier que le répertoire WordPress existe
       stat:
         path: "{{ wp_dir }}"
