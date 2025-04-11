@@ -23,12 +23,6 @@
         state: directory
         mode: '0755'
 
-    - name: Télécharger le template docker-compose.yml.j2 depuis GitHub
-      get_url:
-        url: "{{ docker_compose_template_url }}"
-        dest: "{{ wp_dir }}/docker-compose.yml.j2"
-        mode: '0644'
-
     - name: Transformer le template en docker-compose.yml
       template:
         src: "{{ wp_dir }}/docker-compose.yml.j2"
