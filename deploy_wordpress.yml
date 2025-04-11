@@ -29,32 +29,39 @@
         dest: "{{ wp_dir }}/docker-compose.yml.j2"
         mode: '0644'
 
-    - name: Copier le template en tant que docker-compose.yml (sans rendu Jinja2)
+    - name: Installer jinja2-cli via pip
+      ansible.builtin.pip:
+        name: jinja2-cli
+        executable: pip3
+
+    - name: Générer un fichier vars.json pour Jinja2
       copy:
-        src: "{{ wp_dir }}/docker-compose.yml.j2"
-        dest: "{{ wp_dir }}/docker-compose.yml"
-        remote_src: yes
+        content: "{{ vars | to_json }}"
+        dest: "{{ wp_dir }}/vars.json"
         mode: '0644'
-        
-    - name: Vérifier que le répertoire WordPress existe
+
+    - name: Rendre le template docker-compose.yml avec jinja2-cli
+      shell: |
+        jinja2 {{ wp_dir }}/docker-compose.yml.j2 {{ wp_dir }}/vars.json > {{ wp_dir }}/docker-compose.yml
+      args:
+        executable: /bin/bash
+
+    - name: Supprimer le fichier vars.json (optionnel)
+      file:
+        path: "{{ wp_dir }}/vars.json"
+        state: absent
+
+    - name: Vérifier que le fichier docker-compose.yml existe
       stat:
-        path: "{{ wp_dir }}"
-      register: wp_dir_stat
+        path: "{{ wp_dir }}/docker-compose.yml"
+      register: wp_compose_file
 
-    - name: Afficher le statut du répertoire WordPress
+    - name: Debug fichier généré
       debug:
-        var: wp_dir_stat
-
-    - name: Afficher le contenu du répertoire /opt/wordpress
-      command: ls -la /opt/wordpress
-      register: wp_contents
-
-    - name: Afficher le contenu du répertoire /opt/wordpress
-      debug:
-        var: wp_contents.stdout_lines
+        var: wp_compose_file.stat.exists
 
     - name: Lancer WordPress avec Docker Compose
       community.docker.docker_compose_v2:
         project_src: "{{ wp_dir }}"
         state: present
-      when: wp_dir_stat.stat.exists and wp_dir_stat.stat.isdir
+      when: wp_compose_file.stat.exists
