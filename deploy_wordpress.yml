@@ -27,7 +27,7 @@
 
     - name: Ajouter le dépôt Docker
       apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
         state: present
 
     - name: Installer Docker
@@ -35,6 +35,18 @@
         name: docker-ce
         state: present
         update_cache: yes
+
+    - name: Activer et démarrer le socket Docker
+      systemd:
+        name: docker.socket
+        enabled: yes
+        state: started
+
+    - name: Redémarrer le service Docker
+      systemd:
+        name: docker
+        state: restarted
+        daemon_reload: yes
 
     - name: Installer Docker Compose
       get_url:
@@ -50,7 +62,7 @@
 
     - name: Créer docker-compose.yml
       template:
-        src: docker-compose.yml.j2
+        src: templates/docker-compose.yml.j2
         dest: "{{ wp_dir }}/docker-compose.yml"
         mode: '0644'
 
