@@ -1,28 +1,83 @@
 - name: Déployer WordPress avec Docker Compose
- hosts: ubuntu
- become: yes
+  hosts: ubuntu
+  become: yes
 
- vars:
- wp_dir: /opt/wordpress
- mysql_root_password: rootpassword
- mysql_database: wordpress
- mysql_user: wpuser
- mysql_password: wppassword
+  vars:
+    wp_dir: /opt/wordpress
+    mysql_root_password: rootpassword
+    mysql_database: wordpress
+    mysql_user: wpuser
+    mysql_password: wppassword
 
- tasks:
- - name: Créer le répertoire pour WordPress
- file:
- path: "{{ wp_dir }}"
- state: directory
- mode: '0755'
+  tasks:
+    - name: Installer les dépendances nécessaires
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+        update_cache: yes
 
- - name: Créer docker-compose.yml
- template:
- src: docker-compose.yml.j2
- dest: "{{ wp_dir }}/docker-compose.yml"
- mode: '0644'
+    - name: Ajouter la clé GPG officielle de Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
 
- - name: Lancer WordPress avec Docker Compose
- docker_compose:
- project_src: "{{ wp_dir }}"
- state: present
+    - name: Ajouter le dépôt Docker
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Installer Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Installer Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Créer le répertoire pour WordPress
+      file:
+        path: "{{ wp_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Créer docker-compose.yml
+      template:
+        src: docker-compose.yml.j2
+        dest: "{{ wp_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Lancer WordPress avec Docker Compose
+      docker_compose:
+        project_src: "{{ wp_dir }}"
+        state: present
+        definition:
+          version: '3.1'
+          services:
+            wordpress:
+              image: wordpress:latest
+              ports:
+                - "80:80"
+              environment:
+                WORDPRESS_DB_HOST: db
+                WORDPRESS_DB_USER: "{{ mysql_user }}"
+                WORDPRESS_DB_PASSWORD: "{{ mysql_password }}"
+                WORDPRESS_DB_NAME: "{{ mysql_database }}"
+              volumes:
+                - "{{ wp_dir }}/html:/var/www/html"
+            db:
+              image: mysql:5.7
+              environment:
+                MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
+                MYSQL_DATABASE: "{{ mysql_database }}"
+                MYSQL_USER: "{{ mysql_user }}"
+                MYSQL_PASSWORD: "{{ mysql_password }}"
+              volumes:
+                - "{{ wp_dir }}/db:/var/lib/mysql"
